@@ -18,7 +18,7 @@ class WrittenAnswerScreen extends StatefulWidget {
 }
 
 class _WrittenAnswerScreenState extends State<WrittenAnswerScreen> {
-  List<String> questionNames = ['Ka', 'Kha', 'Ga', 'Gha'];
+  List<String> questionNames = ['ক', 'খ', 'গ', 'ঘ'];
   List<List<ImageItem>> rowItems = [];
 
   void addItem(int rowIndex) {
@@ -38,9 +38,11 @@ class _WrittenAnswerScreenState extends State<WrittenAnswerScreen> {
   @override
   void initState() {
     super.initState();
-    for (int i = 0; i < questionNames.length; i++) {
-      rowItems.add([]);
-    }
+    // for (int i = 0; i < questionNames.length; i++) {
+    //   rowItems.add([]);
+    // }
+
+    rowItems.add([]);
   }
 
   Widget buildDefaultItem(int rowIndex) {
@@ -125,14 +127,14 @@ class _WrittenAnswerScreenState extends State<WrittenAnswerScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.center,
-                            children: const [
-                              Icon(
+                            children: [
+                              const Icon(
                                 Icons.add_outlined,
                                 color: Colors.black,
                               ),
                               Text(
-                                "Add question",
-                                style: TextStyle(
+                                "${questionNames[0]} এর উত্তর",
+                                style: const TextStyle(
                                     color: Colors.grey, fontSize: 12),
                               ),
                             ],
