@@ -117,6 +117,148 @@ class _WrittenAnswerScreenState extends State<WrittenAnswerScreen> {
     );
   }
 
+  // @override
+  // Widget build(BuildContext context) {
+  //   return Scaffold(
+  //     appBar: AppBar(
+  //       title: const Text(
+  //         "Answer Sheet",
+  //         style: TextStyle(color: Colors.black, fontSize: 16),
+  //       ),
+  //     ),
+  //     body: Container(
+  //       margin: const EdgeInsets.all(15),
+  //       child: Column(
+  //         children: [
+  //           Container(
+  //             height: 100,
+  //             child: Row(
+  //               mainAxisAlignment: MainAxisAlignment.center,
+  //               crossAxisAlignment: CrossAxisAlignment.center,
+  //               children: [
+  //                 Expanded(
+  //                   flex: 3,
+  //                   child: Card(
+  //                     shape: RoundedRectangleBorder(
+  //                         borderRadius: BorderRadius.circular(12)),
+  //                     color: Colors.white,
+  //                     child: Container(
+  //                       alignment: Alignment.center,
+  //                       height: 75,
+  //                       padding: const EdgeInsets.all(12),
+  //                       child: Text(
+  //                         widget.mainQuestionAnswerTitle,
+  //                         style: const TextStyle(
+  //                             color: Colors.black,
+  //                             fontSize: 18,
+  //                             fontWeight: FontWeight.bold),
+  //                       ),
+  //                     ),
+  //                   ),
+  //                 ),
+  //                 Expanded(
+  //                   flex: 1,
+  //                   child: GestureDetector(
+  //                     onTap: () {
+  //                       if (rowItems.length < questionNames.length) {
+  //                         if (_whichQuestionRunningCounter < questionNames.length - 1) {
+  //                           _whichQuestionRunningCounter ++;
+  //                         }
+  //
+  //                         setState(() {
+  //                           rowItems.add([]);
+  //                         });
+  //                       }
+  //                     },
+  //                     child: Container(
+  //                       width: 75,
+  //                       height: 75,
+  //                       decoration: BoxDecoration(
+  //                         color: Colors.white,
+  //                         borderRadius: BorderRadius.circular(12),
+  //                         border: Border.all(color: Colors.grey),
+  //                       ),
+  //                       child: Center(
+  //                         child: Column(
+  //                           mainAxisAlignment: MainAxisAlignment.center,
+  //                           crossAxisAlignment: CrossAxisAlignment.center,
+  //                           children: [
+  //                             const Icon(
+  //                               Icons.add_outlined,
+  //                               color: Colors.black,
+  //                             ),
+  //                             Text(
+  //                               "${questionNames[_whichQuestionRunningCounter]} এর উত্তর",
+  //                               style: const TextStyle(
+  //                                   color: Colors.grey, fontSize: 12),
+  //                             ),
+  //                           ],
+  //                         ),
+  //                       ),
+  //                     ),
+  //                   ),
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+  //           Expanded(
+  //             child: ListView.builder(
+  //               itemCount: rowItems.length,
+  //               itemBuilder: (context, rowIndex) {
+  //                 final questionName = questionNames[rowIndex];
+  //                 final items = rowItems[rowIndex];
+  //                 return Column(
+  //                   mainAxisAlignment: MainAxisAlignment.start,
+  //                   crossAxisAlignment: CrossAxisAlignment.start,
+  //                   children: [
+  //                     Card(
+  //                       shape: RoundedRectangleBorder(
+  //                           borderRadius: BorderRadius.circular(12)),
+  //                       elevation: 10,
+  //                       child: Container(
+  //                         padding: const EdgeInsets.only(
+  //                             left: 15, top: 5, bottom: 5, right: 15),
+  //                         child: Text(
+  //                           questionName,
+  //                           style: const TextStyle(
+  //                               fontSize: 24,
+  //                               fontWeight: FontWeight.bold,
+  //                               color: Colors.black),
+  //                         ),
+  //                       ),
+  //                     ),
+  //                     const SizedBox(height: 8),
+  //                     SizedBox(
+  //                       height: 200,
+  //                       child: GridView.builder(
+  //                         shrinkWrap: true,
+  //                         gridDelegate:
+  //                         const SliverGridDelegateWithFixedCrossAxisCount(
+  //                             crossAxisCount: 4,
+  //                             childAspectRatio: 1,
+  //                             mainAxisSpacing: 10,
+  //                             crossAxisSpacing: 10
+  //                         ),
+  //                         itemCount: items.length + 1,
+  //                         itemBuilder: (context, index) {
+  //                           if (index == items.length) {
+  //                             return buildDefaultItem(rowIndex);
+  //                           }
+  //                           return items[index];
+  //                         },
+  //                       ),
+  //                     ),
+  //                   ],
+  //                 );
+  //               },
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -202,55 +344,57 @@ class _WrittenAnswerScreenState extends State<WrittenAnswerScreen> {
               ),
             ),
             Expanded(
-              child: ListView.builder(
-                itemCount: rowItems.length,
-                itemBuilder: (context, rowIndex) {
-                  final questionName = questionNames[rowIndex];
-                  final items = rowItems[rowIndex];
-                  return Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Card(
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        elevation: 10,
-                        child: Container(
-                          padding: const EdgeInsets.only(
-                              left: 15, top: 5, bottom: 5, right: 15),
-                          child: Text(
-                            questionName,
-                            style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black),
+              child: SingleChildScrollView(
+                child: Column(
+                  children: List<Widget>.generate(rowItems.length, (rowIndex) {
+                    final questionName = questionNames[rowIndex];
+                    final items = rowItems[rowIndex];
+                    return Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Card(
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                          elevation: 10,
+                          child: Container(
+                            padding: const EdgeInsets.only(
+                                left: 15, top: 5, bottom: 5, right: 15),
+                            child: Text(
+                              questionName,
+                              style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black),
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        height: 200,
-                        child: GridView.builder(
-                          shrinkWrap: true,
-                          gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 4,
-                              childAspectRatio: 1,
-                              mainAxisSpacing: 10,
-                              crossAxisSpacing: 10
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          height: 200,
+                          child: GridView.builder(
+                            physics: NeverScrollableScrollPhysics(),
+                            shrinkWrap: true,
+                            gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 4,
+                                childAspectRatio: 1,
+                                mainAxisSpacing: 10,
+                                crossAxisSpacing: 10
+                            ),
+                            itemCount: items.length + 1,
+                            itemBuilder: (context, index) {
+                              if (index == items.length) {
+                                return buildDefaultItem(rowIndex);
+                              }
+                              return items[index];
+                            },
                           ),
-                          itemCount: items.length + 1,
-                          itemBuilder: (context, index) {
-                            if (index == items.length) {
-                              return buildDefaultItem(rowIndex);
-                            }
-                            return items[index];
-                          },
                         ),
-                      ),
-                    ],
-                  );
-                },
+                      ],
+                    );
+                  }),
+                ),
               ),
             ),
           ],
@@ -258,6 +402,7 @@ class _WrittenAnswerScreenState extends State<WrittenAnswerScreen> {
       ),
     );
   }
+
 }
 
 class ImageItem extends StatelessWidget {
