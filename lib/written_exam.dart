@@ -19,21 +19,72 @@ class WrittenAnswerScreen extends StatefulWidget {
 
 class _WrittenAnswerScreenState extends State<WrittenAnswerScreen> {
   List<String> questionNames = ['ক', 'খ', 'গ', 'ঘ'];
+  int _whichQuestionRunningCounter = 1;
   List<List<ImageItem>> rowItems = [];
 
   void addItem(int rowIndex) {
     pickImageFromGallery(rowIndex);
   }
 
+
+  // Future<void> pickImageFromGallery(int rowIndex) async {
+  //   final ImagePicker picker = ImagePicker();
+  //   final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+  //   if (image != null) {
+  //     setState(() {
+  //       rowItems[rowIndex].insert(0, ImageItem(
+  //         image: File(image.path),
+  //         onDelete: () {
+  //           setState(() {
+  //             rowItems[rowIndex].removeWhere((item) => item.image.path == image.path);
+  //           });
+  //         },
+  //       ));
+  //     });
+  //   }
+  // }
+
   Future<void> pickImageFromGallery(int rowIndex) async {
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
       setState(() {
-        rowItems[rowIndex].insert(0, ImageItem(image: File(image.path)));
+        rowItems[rowIndex].insert(0, ImageItem(
+          image: File(image.path),
+          onDelete: () {
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: const Text('Confirm Delete'),
+                  content: const Text('Are you sure you want to delete this image?'),
+                  actions: <Widget>[
+                    TextButton(
+                      child: const Text('Cancel'),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                    TextButton(
+                      child: const Text('Delete'),
+                      onPressed: () {
+                        setState(() {
+                          rowItems[rowIndex].removeWhere((item) => item.image.path == image.path);
+                        });
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        ));
       });
     }
   }
+
+
 
   @override
   void initState() {
@@ -110,6 +161,10 @@ class _WrittenAnswerScreenState extends State<WrittenAnswerScreen> {
                     child: GestureDetector(
                       onTap: () {
                         if (rowItems.length < questionNames.length) {
+                          if (_whichQuestionRunningCounter < questionNames.length - 1) {
+                            _whichQuestionRunningCounter ++;
+                          }
+
                           setState(() {
                             rowItems.add([]);
                           });
@@ -133,7 +188,7 @@ class _WrittenAnswerScreenState extends State<WrittenAnswerScreen> {
                                 color: Colors.black,
                               ),
                               Text(
-                                "${questionNames[0]} এর উত্তর",
+                                "${questionNames[_whichQuestionRunningCounter]} এর উত্তর",
                                 style: const TextStyle(
                                     color: Colors.grey, fontSize: 12),
                               ),
@@ -173,7 +228,7 @@ class _WrittenAnswerScreenState extends State<WrittenAnswerScreen> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Container(
+                      SizedBox(
                         height: 200,
                         child: GridView.builder(
                           shrinkWrap: true,
@@ -207,14 +262,32 @@ class _WrittenAnswerScreenState extends State<WrittenAnswerScreen> {
 
 class ImageItem extends StatelessWidget {
   final File image;
+  final VoidCallback onDelete;
 
-  ImageItem({required this.image});
+  const ImageItem({super.key, required this.image, required this.onDelete});
 
   @override
   Widget build(BuildContext context) {
-    return Image.file(
-      image,
-      fit: BoxFit.cover,
+
+    return GestureDetector(
+      onLongPress: onDelete,
+      child: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.file(
+            image,
+            fit: BoxFit.cover,
+          ),
+        ),
+      ),
     );
+
   }
 }
