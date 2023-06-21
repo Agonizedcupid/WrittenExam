@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'package:pdf/pdf.dart';
@@ -61,43 +62,123 @@ class _WrittenAnswerScreenState extends State<WrittenAnswerScreen> {
     return file.path;
   }
 
+  /// Solved without CROP
+  // Future<void> pickImageFromGallery(int rowIndex) async {
+  //   final ImagePicker picker = ImagePicker();
+  //   final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+  //   if (image != null) {
+  //     setState(() {
+  //       rowItems[rowIndex].insert(0, ImageItem(
+  //         image: File(image.path),
+  //         onDelete: () {
+  //           showDialog(
+  //             context: context,
+  //             builder: (BuildContext context) {
+  //               return AlertDialog(
+  //                 title: const Text('Confirm Delete'),
+  //                 content: const Text('Are you sure you want to delete this image?'),
+  //                 actions: <Widget>[
+  //                   TextButton(
+  //                     child: const Text('Cancel'),
+  //                     onPressed: () {
+  //                       Navigator.of(context).pop();
+  //                     },
+  //                   ),
+  //                   TextButton(
+  //                     child: const Text('Delete'),
+  //                     onPressed: () {
+  //                       setState(() {
+  //                         rowItems[rowIndex].removeWhere((item) => item.image.path == image.path);
+  //                       });
+  //                       Navigator.of(context).pop();
+  //                     },
+  //                   ),
+  //                 ],
+  //               );
+  //             },
+  //           );
+  //         },
+  //       ));
+  //     });
+  //   }
+  // }
+
+  /// Adding the CROPPING functionality:
   Future<void> pickImageFromGallery(int rowIndex) async {
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
     if (image != null) {
-      setState(() {
-        rowItems[rowIndex].insert(0, ImageItem(
-          image: File(image.path),
-          onDelete: () {
-            showDialog(
-              context: context,
-              builder: (BuildContext context) {
-                return AlertDialog(
-                  title: const Text('Confirm Delete'),
-                  content: const Text('Are you sure you want to delete this image?'),
-                  actions: <Widget>[
-                    TextButton(
-                      child: const Text('Cancel'),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                    ),
-                    TextButton(
-                      child: const Text('Delete'),
-                      onPressed: () {
-                        setState(() {
-                          rowItems[rowIndex].removeWhere((item) => item.image.path == image.path);
-                        });
-                        Navigator.of(context).pop();
-                      },
-                    ),
-                  ],
-                );
-              },
-            );
-          },
-        ));
-      });
+      // Create a file instance from the picked image's path.
+      File initialImageFile = File(image.path);
+
+      // Open the cropping UI.
+      final croppedFile = await ImageCropper().cropImage(
+        sourcePath: initialImageFile.path,
+        aspectRatioPresets: Platform.isAndroid
+            ? [
+          CropAspectRatioPreset.square,
+          CropAspectRatioPreset.ratio3x2,
+          CropAspectRatioPreset.original,
+          CropAspectRatioPreset.ratio4x3,
+          CropAspectRatioPreset.ratio16x9
+        ]
+            : [
+          CropAspectRatioPreset.original,
+          CropAspectRatioPreset.square,
+          CropAspectRatioPreset.ratio3x2,
+          CropAspectRatioPreset.ratio4x3,
+          CropAspectRatioPreset.ratio5x3,
+          CropAspectRatioPreset.ratio5x4,
+          CropAspectRatioPreset.ratio7x5,
+          CropAspectRatioPreset.ratio16x9
+        ],
+        uiSettings: [
+          AndroidUiSettings(
+              toolbarTitle: 'Cropper',
+              toolbarColor: Colors.deepOrange,
+              toolbarWidgetColor: Colors.white,
+              initAspectRatio: CropAspectRatioPreset.original,
+              lockAspectRatio: false),
+        ]
+      );
+
+      if (croppedFile != null) {
+        File convertCroppedFileToFile = File(croppedFile.path);
+        setState(() {
+          rowItems[rowIndex].insert(0, ImageItem(
+            image: convertCroppedFileToFile,
+            onDelete: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const Text('Confirm Delete'),
+                    content: const Text('Are you sure you want to delete this image?'),
+                    actions: <Widget>[
+                      TextButton(
+                        child: const Text('Cancel'),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                      TextButton(
+                        child: const Text('Delete'),
+                        onPressed: () {
+                          setState(() {
+                            rowItems[rowIndex].removeWhere((item) => item.image.path == croppedFile.path);
+                          });
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          ));
+        });
+      }
     }
   }
 
@@ -276,7 +357,7 @@ class _WrittenAnswerScreenState extends State<WrittenAnswerScreen> {
                         ),
                         const SizedBox(height: 8),
                         SizedBox(
-                          height: 200,
+                          height: 160,
                           child: GridView.builder(
                             physics: const NeverScrollableScrollPhysics(),
                             shrinkWrap: true,
