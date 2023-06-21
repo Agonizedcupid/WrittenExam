@@ -1,3 +1,4 @@
+import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -9,10 +10,10 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pdfWidgets;
 
-
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'DirectoryHelper.dart';
 
@@ -31,10 +32,12 @@ class _WrittenAnswerScreenState extends State<WrittenAnswerScreen> {
   List<List<ImageItem>> rowItems = [];
 
   void addItem(int rowIndex) {
-    pickImageFromGallery(rowIndex);
+    //pickImageFromGallery(rowIndex);
+    chooseUserSelection(rowIndex);
   }
 
-  Future<String> createPdf(List<File> imageFiles, {required String subdirectory}) async {
+  Future<String> createPdf(List<File> imageFiles,
+      {required String subdirectory}) async {
     final pdf = pdfWidgets.Document();
 
     for (var imageFile in imageFiles) {
@@ -104,9 +107,16 @@ class _WrittenAnswerScreenState extends State<WrittenAnswerScreen> {
   // }
 
   /// Adding the CROPPING functionality:
-  Future<void> pickImageFromGallery(int rowIndex) async {
+  Future<void> pickImageFromGallery(
+      int rowIndex, ImageSource selectedImageSource) async {
+    //final ImagePicker picker = ImagePicker();
+    /// GALLERY
+    //final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    /// CAMERA
+    //final XFile? image = await picker.pickImage(source: ImageSource.camera);
+
     final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    final XFile? image = await picker.pickImage(source: selectedImageSource);
 
     if (image != null) {
       // Create a file instance from the picked image's path.
@@ -114,74 +124,148 @@ class _WrittenAnswerScreenState extends State<WrittenAnswerScreen> {
 
       // Open the cropping UI.
       final croppedFile = await ImageCropper().cropImage(
-        sourcePath: initialImageFile.path,
-        aspectRatioPresets: Platform.isAndroid
-            ? [
-          CropAspectRatioPreset.square,
-          CropAspectRatioPreset.ratio3x2,
-          CropAspectRatioPreset.original,
-          CropAspectRatioPreset.ratio4x3,
-          CropAspectRatioPreset.ratio16x9
-        ]
-            : [
-          CropAspectRatioPreset.original,
-          CropAspectRatioPreset.square,
-          CropAspectRatioPreset.ratio3x2,
-          CropAspectRatioPreset.ratio4x3,
-          CropAspectRatioPreset.ratio5x3,
-          CropAspectRatioPreset.ratio5x4,
-          CropAspectRatioPreset.ratio7x5,
-          CropAspectRatioPreset.ratio16x9
-        ],
-        uiSettings: [
-          AndroidUiSettings(
-              toolbarTitle: 'Cropper',
-              toolbarColor: Colors.deepOrange,
-              toolbarWidgetColor: Colors.white,
-              initAspectRatio: CropAspectRatioPreset.original,
-              lockAspectRatio: false),
-        ]
-      );
+          sourcePath: initialImageFile.path,
+          aspectRatioPresets: Platform.isAndroid
+              ? [
+                  CropAspectRatioPreset.square,
+                  CropAspectRatioPreset.ratio3x2,
+                  CropAspectRatioPreset.original,
+                  CropAspectRatioPreset.ratio4x3,
+                  CropAspectRatioPreset.ratio16x9
+                ]
+              : [
+                  CropAspectRatioPreset.original,
+                  CropAspectRatioPreset.square,
+                  CropAspectRatioPreset.ratio3x2,
+                  CropAspectRatioPreset.ratio4x3,
+                  CropAspectRatioPreset.ratio5x3,
+                  CropAspectRatioPreset.ratio5x4,
+                  CropAspectRatioPreset.ratio7x5,
+                  CropAspectRatioPreset.ratio16x9
+                ],
+          uiSettings: [
+            AndroidUiSettings(
+                toolbarTitle: 'Cropper',
+                toolbarColor: Colors.deepOrange,
+                toolbarWidgetColor: Colors.white,
+                initAspectRatio: CropAspectRatioPreset.original,
+                lockAspectRatio: false),
+          ]);
 
       if (croppedFile != null) {
         File convertCroppedFileToFile = File(croppedFile.path);
         setState(() {
-          rowItems[rowIndex].insert(0, ImageItem(
-            image: convertCroppedFileToFile,
-            onDelete: () {
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    title: const Text('Confirm Delete'),
-                    content: const Text('Are you sure you want to delete this image?'),
-                    actions: <Widget>[
-                      TextButton(
-                        child: const Text('Cancel'),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                      ),
-                      TextButton(
-                        child: const Text('Delete'),
-                        onPressed: () {
-                          setState(() {
-                            rowItems[rowIndex].removeWhere((item) => item.image.path == croppedFile.path);
-                          });
-                          Navigator.of(context).pop();
-                        },
-                      ),
-                    ],
+          rowItems[rowIndex].insert(
+              0,
+              ImageItem(
+                image: convertCroppedFileToFile,
+                onDelete: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: const Text('Confirm Delete'),
+                        content: const Text(
+                            'Are you sure you want to delete this image?'),
+                        actions: <Widget>[
+                          TextButton(
+                            child: const Text('Cancel'),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                          TextButton(
+                            child: const Text('Delete'),
+                            onPressed: () {
+                              setState(() {
+                                rowItems[rowIndex].removeWhere((item) =>
+                                    item.image.path == croppedFile.path);
+                              });
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                        ],
+                      );
+                    },
                   );
                 },
-              );
-            },
-          ));
+              ));
         });
       }
     }
   }
 
+  bool _alwaysUseSelectedSource = false;
+
+  void chooseUserSelection(int rowIndex) async {
+    var completer = Completer<ImageSource>();
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    const String imageSourceKey = 'imageSource';
+    const String alwaysUseSelectedSourceKey = 'alwaysUseSelectedSource';
+    String? savedImageSource = prefs.getString(imageSourceKey);
+    bool alwaysUseSelectedSource = prefs.getBool(alwaysUseSelectedSourceKey) ?? false;
+
+
+    if (alwaysUseSelectedSource && savedImageSource != null) {
+      debugPrint(
+          "CHECKING_SELECTION: ${imageSourceKey} -> ${alwaysUseSelectedSource.toString()}");
+      if (savedImageSource == 'camera') {
+        completer.complete(ImageSource.camera);
+      } else {
+        completer.complete(ImageSource.gallery);
+      }
+    } else {
+      showModalBottomSheet(
+        context: context,
+        builder: (BuildContext bc) {
+          return StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+              return SafeArea(
+                child: Wrap(
+                  children: <Widget>[
+                    ListTile(
+                      leading: const Icon(Icons.photo_library),
+                      title: const Text('Gallery'),
+                      onTap: () async {
+                        await prefs.setString(imageSourceKey, 'gallery');
+                        await prefs.setBool(alwaysUseSelectedSourceKey,
+                            _alwaysUseSelectedSource);
+                        Navigator.pop(context);
+                        completer.complete(ImageSource.gallery);
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.photo_camera),
+                      title: const Text('Camera'),
+                      onTap: () async {
+                        await prefs.setString(imageSourceKey, 'camera');
+                        await prefs.setBool(alwaysUseSelectedSourceKey,
+                            _alwaysUseSelectedSource);
+                        Navigator.pop(context);
+                        completer.complete(ImageSource.camera);
+                      },
+                    ),
+                    CheckboxListTile(
+                      value: _alwaysUseSelectedSource,
+                      onChanged: (newValue) {
+                        setState(() {
+                          _alwaysUseSelectedSource = newValue!;
+                        });
+                      },
+                      title: const Text('Always use selected source'),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      );
+    }
+
+    ImageSource _selectedImageSource = await completer.future;
+    pickImageFromGallery(rowIndex, _selectedImageSource);
+  }
 
 
   @override
@@ -215,7 +299,6 @@ class _WrittenAnswerScreenState extends State<WrittenAnswerScreen> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -237,20 +320,25 @@ class _WrittenAnswerScreenState extends State<WrittenAnswerScreen> {
                 children: [
                   Expanded(
                     flex: 3,
-                    child: Card(
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                      color: Colors.white,
-                      child: Container(
-                        alignment: Alignment.center,
-                        height: 75,
-                        padding: const EdgeInsets.all(12),
-                        child: Text(
-                          widget.mainQuestionAnswerTitle,
-                          style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold),
+                    child: GestureDetector(
+                      onTap: () {
+                        //checkBottomSheet();
+                      },
+                      child: Card(
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                        color: Colors.white,
+                        child: Container(
+                          alignment: Alignment.center,
+                          height: 75,
+                          padding: const EdgeInsets.all(12),
+                          child: Text(
+                            widget.mainQuestionAnswerTitle,
+                            style: const TextStyle(
+                                color: Colors.black,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold),
+                          ),
                         ),
                       ),
                     ),
@@ -260,8 +348,9 @@ class _WrittenAnswerScreenState extends State<WrittenAnswerScreen> {
                     child: GestureDetector(
                       onTap: () {
                         if (rowItems.length < questionNames.length) {
-                          if (_whichQuestionRunningCounter < questionNames.length - 1) {
-                            _whichQuestionRunningCounter ++;
+                          if (_whichQuestionRunningCounter <
+                              questionNames.length - 1) {
+                            _whichQuestionRunningCounter++;
                           }
 
                           setState(() {
@@ -332,10 +421,17 @@ class _WrittenAnswerScreenState extends State<WrittenAnswerScreen> {
                             InkWell(
                               onTap: () async {
                                 // Handle PDF generation
-                                String pdfPath = await createPdf(rowItems[rowIndex].whereType<ImageItem>().map((item) => item.image).toList(), subdirectory: "WrittenExam");
-                                showPdf(pdfPath, "${questionNames[_whichQuestionRunningCounter - 1]} এর উত্তর");
+                                String pdfPath = await createPdf(
+                                    rowItems[rowIndex]
+                                        .whereType<ImageItem>()
+                                        .map((item) => item.image)
+                                        .toList(),
+                                    subdirectory: "WrittenExam");
+                                showPdf(pdfPath,
+                                    "${questionNames[_whichQuestionRunningCounter - 1]} এর উত্তর");
                               },
-                              splashColor: Colors.blue, // Set the desired splash color
+                              splashColor: Colors.blue,
+                              // Set the desired splash color
                               child: Card(
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(4),
@@ -348,11 +444,11 @@ class _WrittenAnswerScreenState extends State<WrittenAnswerScreen> {
                                     bottom: 5,
                                     right: 15,
                                   ),
-                                  child: const Icon(Icons.picture_as_pdf_outlined),
+                                  child:
+                                      const Icon(Icons.picture_as_pdf_outlined),
                                 ),
                               ),
                             ),
-
                           ],
                         ),
                         const SizedBox(height: 8),
@@ -362,12 +458,11 @@ class _WrittenAnswerScreenState extends State<WrittenAnswerScreen> {
                             physics: const NeverScrollableScrollPhysics(),
                             shrinkWrap: true,
                             gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 4,
-                                childAspectRatio: 1,
-                                mainAxisSpacing: 10,
-                                crossAxisSpacing: 10
-                            ),
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 4,
+                                    childAspectRatio: 1,
+                                    mainAxisSpacing: 10,
+                                    crossAxisSpacing: 10),
                             itemCount: items.length + 1,
                             itemBuilder: (context, index) {
                               if (index == items.length) {
@@ -405,8 +500,6 @@ class _WrittenAnswerScreenState extends State<WrittenAnswerScreen> {
       ),
     );
   }
-
-
 }
 
 class ImageItem extends StatelessWidget {
@@ -417,16 +510,14 @@ class ImageItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return GestureDetector(
       onLongPress: onDelete,
       onTap: () {
         showDialog(
-            context: context, 
+            context: context,
             builder: (BuildContext context) => Dialog(
-              child: Image.file(image),
-            )
-        );
+                  child: Image.file(image),
+                ));
       },
       child: Container(
         width: double.infinity,
@@ -445,6 +536,5 @@ class ImageItem extends StatelessWidget {
         ),
       ),
     );
-
   }
 }
